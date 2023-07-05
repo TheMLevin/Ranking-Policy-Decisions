@@ -4,13 +4,15 @@ import random
 from elements.envs import atari_games
 from elements.envs import atari_games_clean
 
-ALL_POLS = ['lazy', 'donoth', 'random', 'minigrid_good', 'minigrid_lava', 'CartPole_good', 'CartPole_bad']  + \
+ALL_POLS = ['lazy', 'lazymod', 'donoth', 'random', 'minigrid_good', 'minigrid_lava', 'CartPole_good', 'CartPole_bad']  + \
     ['UBER' + game for game in atari_games_clean] + \
     ['GYM'  + game for game in atari_games]
 
 def get_pol(name, env, device, **kwargs):
     if name == 'lazy':
         return LazyPol(**kwargs)
+    if name == 'lazymod':
+        return LazyModPol(**kwargs, actions=env.actions)
     if name == 'donoth':
         return DoNothPol(do_nothing=env.do_nothing)
     if name == 'random':
@@ -51,6 +53,23 @@ class LazyPol(AbstractPol):
             return actions[-1]
         else:
             return self.default
+
+class LazyModPol(LazyPol):
+    def __init__(self, actions=None, default=0):
+        super().__init__(default)
+        if actions is None:
+            raise NotImplementedError('No action space provided for random sampling!')
+        self.actions = actions
+    def __call__(self, states, actions, rews):
+        if len(actions) >= 20 and len(set(actions[-20:])) == 1:
+            print('**********************')
+            print(states[-2]['image'] == states[-1]['image'])
+            print(states[-2]['image'])
+            print(states[-1]['image'])
+        if len(states) >= 2 and (states[-1]['image'] == states[-2]['image']).all():
+            return random.choice(self.actions)
+        else:
+            return super().__call__(states, actions, rews)
 
 class DoNothPol(AbstractPol):
     def __init__(self, do_nothing=None):
@@ -94,6 +113,25 @@ class MixedPol(AbstractPol):
 
     def was_last_mut(self):
         return self.was_mut
+
+class TripPol(MixedPol):
+
+    def __init__(self, pol, pol_d, not_mut, trip_size, abst=None):
+        super().__init__(pol, pol_d, not_mut, abst)
+        self.trip_size = trip_size
+        self.trip_count = 0
+
+    def __call__(self, states, actions, rews):
+        if self.not_mut == 'all' or (not self.trip_count and self.abst(states[-1]) in self.not_mut):
+            self.was_mut = False
+            return self.pol(states, actions, rews)
+        else:
+            if self.abst(states[-1]) in self.not_mut:
+                self.trip_count = self.trip_size
+            else:
+                self.trip_count -= 1
+            self.was_mut = True
+            return self.pol_d(states, actions, rews)
 
 class RandomRankingPol(AbstractPol):
     """ Policy which takes all states when initialized,

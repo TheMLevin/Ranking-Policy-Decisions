@@ -25,8 +25,7 @@ class MinigridEnv(AbstractEnv):
         self.observation_space = self.env.observation_space
         self.action_space = self.env.action_space
 
-        self.env.seed(seed)
-        self.reset() # First reset changes layout for seed
+        self.reset()  # First reset changes layout for seed
         super().__init__(do_nothing=2, actions=list(range(self.action_space.n))) 
 
     def step(self, action):

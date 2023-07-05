@@ -86,7 +86,7 @@ def run_env_with(env, pol, func):
     args = {
         'env': env,
         'pol': pol,
-        'states': [env.reset()],
+        'states': [env.reset()[0]],
         'acts': [],
         'rews': [],
         'done': False,
@@ -97,7 +97,7 @@ def run_env_with(env, pol, func):
     while not args['done']:
         args['acts'].append(pol(args['states'], args['acts'], args['rews']))
 
-        s, r, d, _ = env.step(args['acts'][-1])
+        s, r, d, *_ = env.step(args['acts'][-1])
 
         args['states'].append(s)
         args['rews'].append(r)

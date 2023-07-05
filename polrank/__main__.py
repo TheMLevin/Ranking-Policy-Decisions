@@ -7,6 +7,7 @@ import torch
 from counting import count
 from scoring import score
 from interpolating import interpolate
+from fix import fix
 import utils.cli as cli
 from utils.logging import Logger
 from visualisation.graphing import draw_interpol_results
@@ -48,6 +49,13 @@ def main():
     interpol_do = {
         'redo': scores_do['redo'] or not logger.is_done('interpol') or args.redo_interpol is not None,
         'update': scores_do['update']
+    }
+    fix_do = {
+        'redo': interpol_do['redo'] or interpol_do['update'] or not logger.is_done('fix')
+    }
+    interpol_2_do = {
+        'redo': True or fix_do['redo'] #or not logger.is_done('interpol_2') or args.redo_interpol_2 is not None,
+        # 'update': fix_do['redo'] #and logger.is_done('interpol_2')
     }
 
     ### Counts
@@ -112,10 +120,24 @@ def main():
         logger.dump_results()
         logger.dump_config()
 
+    if fix_do['redo']:
+        print("\n----- Fixing -----\n")
+        fixed = fix(logger)
+        logger.update_fix(fixed)
+        logger.dump_results()
+        logger.dump_config()
+
+    if interpol_2_do['redo']:
+        print("\n----- Interpolating 2 -----\n")
+        interpol = interpolate(logger, ['fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4'], 'fix')
+        logger.update_interpolation(interpol)
+        logger.dump_results()
+        logger.dump_config()
+
     ### Display results ###
-    draw_interpol_results(logger, logger.config['score_types'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
+    draw_interpol_results(logger, logger.config['score_types'] + ['fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
         x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=True)
-    draw_interpol_results(logger, logger.config['score_types'], 4, [1], y_fracs=True,
+    draw_interpol_results(logger, logger.config['score_types'] + ['fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4'], 4, [1], y_fracs=True,
         trans_x=lambda x: 1-x, x_name="Policy's Action Taken (% of Steps)",
         y_names=['Original Reward (%)'], smooth=False, combine_sbfl=True)
 

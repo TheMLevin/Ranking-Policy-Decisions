@@ -81,8 +81,7 @@ def run_env_with_muts(env, pol, pol_d, mut_prob, cond):
     mut_prob, and return mutations, visited states, and condition"""
     mut_states = set()
     norm_states = set()
-
-    s = env.reset()
+    s, _ = env.reset()
     ss = env.abst(s)
     state_seq, action_seq, rew_seq = [s], [], []
     steps = 0
@@ -98,8 +97,7 @@ def run_env_with_muts(env, pol, pol_d, mut_prob, cond):
         else:
             a = pol_d(state_seq, action_seq, rew_seq)
             mut_states.add(ss)
-
-        s, r, done, _ = env.step(a)
+        s, r, done, *_ = env.step(a)
         ss = env.abst(s)
 
         state_seq.append(s)

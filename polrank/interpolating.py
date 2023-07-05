@@ -16,7 +16,7 @@ INTERPOL_COLS = [
     "Number of Active Actions Taken",
 ]
 
-def interpolate(logger, score_types=None):
+def interpolate(logger, score_types=None, score_loc='scores'):
     """ Set up interpolation, with score types either
     from logger or overridden by provided ones """
     config = logger.config
@@ -27,7 +27,7 @@ def interpolate(logger, score_types=None):
         config['pol'],
         config['pol_d'],
         config['cond'],
-        logger.data['scores'][0],
+        logger.data[score_loc][0],
         score_types,
         config['n_inc'],
         config['n_test'],
@@ -39,6 +39,7 @@ def interpolate_policies(env, pol, pol_d, cond, rankings, score_types, n_inc, n_
     and saves outcomes for each interpolation. In last step does
     completely unmutated policy, and puts it at n_inc past the last index """
     start = time.time()
+    print(rankings.keys())
 
     results = {}
     for st in score_types:

@@ -117,7 +117,6 @@ def draw_curves(all_xs, all_ys, x_name, y_name, score_types, hval=None, sloc=Non
         score_types = new_st
         all_xs = new_all_xs
         all_ys = new_all_ys
-
     xs, mean_ys, std_ys = mean_and_var(all_xs, all_ys)
     results_table_data(all_xs, all_ys, score_types)
 
@@ -136,8 +135,7 @@ def draw_curves(all_xs, all_ys, x_name, y_name, score_types, hval=None, sloc=Non
             x = [val*100 for val in x]
         ##
 
-        if st in ['rand', 'freqVis', 'tarantula', 'ochiai', 'zoltar', 'wongII']:
-            x, m_y, std_y = only_improve(x, m_y, std_y)
+        x, m_y, std_y = only_improve(x, m_y, std_y)
 
         if st == 'rand':
             plt.plot(x, m_y, linestyle='dashed', label=st, color=ST_COLOURS[st], linewidth=3)
@@ -212,17 +210,21 @@ def mean_and_var(all_xs, all_ys):
         
         x_max = max(final_xs)
         x_fracs = [x / x_max for x in final_xs]
+        y_min = min(final_ys)
+        y_max = max(final_ys)
+        y_fracs = [(y - y_min) / (y_max - y_min) for y in final_ys]
+        std_fracs = [s / (y_max - y_min) for s in final_std]
         st_xs.append(x_fracs)
-        st_mean_ys.append(final_ys)
-        st_std_ys.append(final_std)
-
+        st_mean_ys.append(y_fracs)
+        st_std_ys.append(std_fracs)
     return st_xs, st_mean_ys, st_std_ys
+
 
 def results_table_data(all_xs, all_ys, score_types):
     res = {}
     for i, st in enumerate(score_types):
         xss = [all_sts[i] for all_sts in all_xs]
-        yss = [all_sts[i] for all_sts in all_ys]
+        yss = [[(y - min(all_sts[i])) / (max(all_sts[i]) - min(all_sts[i])) for y in all_sts[i]] for all_sts in all_ys]
 
         res_50 = []
         res_90 = []
@@ -239,8 +241,14 @@ def results_table_data(all_xs, all_ys, score_types):
         res[st] = [np.mean(res_50), np.std(res_50), np.mean(res_90), np.std(res_90)]
 
     js = json.dumps(res, sort_keys=True, indent=4, separators=(',', ':'))
-    with open('results/results_table.json', 'w') as f:
+    with open(f'results/results_table_{results_table_data.count}.json', 'w') as f:
         f.write(js)
+
+    results_table_data.count += 1
+
+
+results_table_data.count = 0
+
 
 def combine_lines(xs, ys, only_improve=False):
     """ Take list of lists for xs and ys (for each score type)

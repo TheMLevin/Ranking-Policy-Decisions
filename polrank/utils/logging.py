@@ -44,6 +44,7 @@ class Logger():
             'counts': [None, 'json'], # {state: [ep, np, ef, nf]}
             'scores': [None, 'json'], # {score_type: [(state, score)]} in descending order by score
             'interpol': [None, 'csv'], # {score_type: inds, avgs, vars, chks, mut_props, mut_ns}
+            'fix': [None, 'json'], # {score_type: [(state, score)]} in descending order by score
             'logs': [None, 'json'] # For storing any info we want
         }
 
@@ -243,6 +244,12 @@ class Logger():
             self.data['interpol'][0] = interpol
         else:
             self.data['interpol'][0].update(interpol)
+
+    def update_fix(self, fix):
+        if self.data['fix'][0] is None:
+            self.data['fix'][0] = fix
+        else:
+            self.data['fix'][0].update(fix)
 
     def update_logs(self, nlog):
         """ Update log """

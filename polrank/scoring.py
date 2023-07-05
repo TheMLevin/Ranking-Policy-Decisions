@@ -6,10 +6,9 @@ import numpy as np
 from utils.timing import sec_to_str
 
 ALL_SCORE_TYPES = ['tarantula', 'ochiai', 'zoltar', 'wongII', 'freqVis',
-    'rand', 'p(f|l)', 'mymeth', 'rev_wongII']
+    'rand', 'p(f|l)', 'mymeth', 'rev_wongII', 'SBFL', 'fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4']
 
 ST_COLOURS = {st: 'C' + str(i) for i, st in enumerate(ALL_SCORE_TYPES)}
-ST_COLOURS['SBFL'] = 'black'
 
 def score(logger, score_types=None):
     config = logger.config
