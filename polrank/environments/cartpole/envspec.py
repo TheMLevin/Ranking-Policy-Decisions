@@ -23,6 +23,9 @@ class CartpoleEnv(AbstractEnv):
     def reset(self):
         return self.env.reset()
 
+    def image(self, state):
+        return str(state)
+
     def abst(self, state):
         return cartpole_abs_func(self.abst_type)(state)
 

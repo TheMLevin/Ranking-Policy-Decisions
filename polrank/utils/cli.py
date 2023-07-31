@@ -62,6 +62,10 @@ def parse_args():
     parser.add_argument('--score_types', '-st', nargs='+',
         choices=ALL_SCORE_TYPES)
 
+    # Grouping
+    parser.add_argument('--num_groups', '-ng', default=100)
+    parser.add_argument('--group_size', '-gs', default=2)
+
     # Interpolating
     parser.add_argument('--n_inc', '-ni', type=int, default=-1,
         help="Number of states to add in at each step of interpolation. -1 does \

@@ -42,10 +42,13 @@ class Logger():
 
         self.data = {
             'counts': [None, 'json'], # {state: [ep, np, ef, nf]}
+            'counts2': [None, 'json'],
             'scores': [None, 'json'], # {score_type: [(state, score)]} in descending order by score
             'interpol': [None, 'csv'], # {score_type: inds, avgs, vars, chks, mut_props, mut_ns}
             'fix': [None, 'json'], # {score_type: [(state, score)]} in descending order by score
-            'logs': [None, 'json'] # For storing any info we want
+            'logs': [None, 'json'], # For storing any info we want
+            'groups': [None, 'json'],
+            'ranks': [None, 'json']
         }
 
         self.filetools = {
@@ -66,6 +69,8 @@ class Logger():
             "n_runs",
             "mut_prob",
             "score_types",
+            "num_groups",
+            "group_size",
             "n_inc",
             "n_test",
             "abst_type",
@@ -123,7 +128,7 @@ class Logger():
             print("config successfully loaded from", self.fileloc)
             return True
         except FileNotFoundError:
-            print("config not found at {}, making new config".format(self.fileloc))
+            print("config not found at {}, making new duconfig".format(self.fileloc))
             return False
 
     ### Data helpers ###
@@ -213,17 +218,19 @@ class Logger():
                     saver(sloc, d)
 
     ### Update data ###
-    def update_counts(self, ncounts, addn=0):
-        counts = self.data['counts'][0] if self.data['counts'][0] is not None else {}
-        for st, ncs in ncounts.items():
-            try:
-                cs = counts[st]
-                cs = [cs[i] + ncs[i] for i in range(4)]
-                counts[st] = cs
-            except KeyError:
-                counts[st] = ncs
-
-        self.data['counts'][0] = counts
+    def update_counts(self, ncounts, addn=0, combine=True, ind=''):
+        if combine:
+            counts = self.data[f'counts{ind}'][0] if self.data[f'counts{ind}'][0] is not None else {}
+            for st, ncs in ncounts.items():
+                try:
+                    cs = counts[st]
+                    cs = [cs[i] + ncs[i] for i in range(4)]
+                    counts[st] = cs
+                except KeyError:
+                    counts[st] = ncs
+        else:
+            counts = ncounts
+        self.data[f'counts{ind}'][0] = counts
         self.config['n_runs'] += addn
 
     def update_scores(self, scores):
@@ -250,6 +257,12 @@ class Logger():
             self.data['fix'][0] = fix
         else:
             self.data['fix'][0].update(fix)
+
+    def update_groups(self, groups):
+        self.data['groups'][0] = groups
+
+    def update_ranks(self, ranks):
+        self.data['ranks'][0] = ranks
 
     def update_logs(self, nlog):
         """ Update log """

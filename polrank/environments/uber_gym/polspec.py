@@ -34,7 +34,7 @@ class RainbowAgent(AbstractPol):
         else:
             train_dict = {self.X_t:states[-1][0][None]}
             results = self.sess.run([self.action_sample], feed_dict=train_dict)
-            act = results[0]
+            act = results[0][0]
         return act
 
 def import_model(model, t_image, t_image_raw, scope="import"):

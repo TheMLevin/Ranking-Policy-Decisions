@@ -36,6 +36,9 @@ class MinigridEnv(AbstractEnv):
         # self.env.seed(self.seed)
         return self.env.reset()
 
+    def image(self, state):
+        return str(state['image'])
+
     def abst(self, state):
         return str(state['image']) + ' ' + str(state['direction'])
 

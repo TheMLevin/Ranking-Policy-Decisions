@@ -54,7 +54,7 @@ def main():
         'redo': interpol_do['redo'] or interpol_do['update'] or not logger.is_done('fix')
     }
     interpol_2_do = {
-        'redo': True or fix_do['redo'] #or not logger.is_done('interpol_2') or args.redo_interpol_2 is not None,
+        'redo': fix_do['redo'] #or not logger.is_done('interpol_2') or args.redo_interpol_2 is not None,
         # 'update': fix_do['redo'] #and logger.is_done('interpol_2')
     }
 
@@ -67,7 +67,6 @@ def main():
     if counts_do['update']:
         N = args.more_count
         print("\n----- Additional Counts ({} more runs) -----\n".format(N))
-
         # If we're adding more counts without having run before, then we need to reset the
         # env or we would be revisiting the same states because of the seed.
         if not counts_do['redo']:
@@ -120,7 +119,7 @@ def main():
         logger.dump_results()
         logger.dump_config()
 
-    if fix_do['redo']:
+    '''if fix_do['redo']:
         print("\n----- Fixing -----\n")
         fixed = fix(logger)
         logger.update_fix(fixed)
@@ -129,17 +128,17 @@ def main():
 
     if interpol_2_do['redo']:
         print("\n----- Interpolating 2 -----\n")
-        interpol = interpolate(logger, ['fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4'], 'fix')
+        interpol = interpolate(logger, ['fix_0', 'fix_1', 'trip_1', 'trip_2'], 'fix')
         logger.update_interpolation(interpol)
         logger.dump_results()
-        logger.dump_config()
+        logger.dump_config()'''
 
     ### Display results ###
-    draw_interpol_results(logger, logger.config['score_types'] + ['fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
-        x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=True)
-    draw_interpol_results(logger, logger.config['score_types'] + ['fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4'], 4, [1], y_fracs=True,
-        trans_x=lambda x: 1-x, x_name="Policy's Action Taken (% of Steps)",
-        y_names=['Original Reward (%)'], smooth=False, combine_sbfl=True)
+    #  + ['fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4']
+    draw_interpol_results(logger, logger.config['score_types'] + ['group'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
+        x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=False)
+    draw_interpol_results(logger, logger.config['score_types'] + ['group'], 4, [1], y_fracs=True,
+        trans_x=lambda x: 1-x, x_name="Policy's Action Taken (% of Steps)", y_names=['Original Reward (%)'], smooth=False, combine_sbfl=True)
 
 if __name__ == '__main__':
     main()

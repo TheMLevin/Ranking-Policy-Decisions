@@ -12,7 +12,7 @@ def get_pol(name, env, device, **kwargs):
     if name == 'lazy':
         return LazyPol(**kwargs)
     if name == 'lazymod':
-        return LazyModPol(**kwargs, actions=env.actions)
+        return LazyModPol(**kwargs, env=env)
     if name == 'donoth':
         return DoNothPol(do_nothing=env.do_nothing)
     if name == 'random':
@@ -55,21 +55,18 @@ class LazyPol(AbstractPol):
             return self.default
 
 class LazyModPol(LazyPol):
-    def __init__(self, actions=None, default=0):
+    def __init__(self, env=None, default=0):
         super().__init__(default)
-        if actions is None:
+        if env is None:
             raise NotImplementedError('No action space provided for random sampling!')
-        self.actions = actions
+        self.env = env
     def __call__(self, states, actions, rews):
-        if len(actions) >= 20 and len(set(actions[-20:])) == 1:
-            print('**********************')
-            print(states[-2]['image'] == states[-1]['image'])
-            print(states[-2]['image'])
-            print(states[-1]['image'])
-        if len(states) >= 2 and (states[-1]['image'] == states[-2]['image']).all():
-            return random.choice(self.actions)
-        else:
-            return super().__call__(states, actions, rews)
+        for i in range(len(actions) - 1, 0, -1):
+            if actions[i] == actions[-1] and self.env.image(states[i]) == self.env.image(states[-1]):
+                return random.choice(self.env.actions)
+            elif actions[i] != actions[-1]:
+                break
+        return super().__call__(states, actions, rews)
 
 class DoNothPol(AbstractPol):
     def __init__(self, do_nothing=None):

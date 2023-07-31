@@ -36,18 +36,21 @@ def fix_states(env, pol, pol_d, cond, rankings, interpol, score_types, n_inc, n_
     bounds = []
     for st in [x for x in score_types if x != 'rand']:
         ys = interpol[st][1]
-        score = (max(ys) - min(ys)) * .8 + min(ys)
+        score = (max(ys) - ys[0]) * .8 + ys[0]
         i = np.where(np.array(ys) >= score)[0][0]
         bounds.append((int(interpol[st][0][i]), st))
         # bounds.append((1 - interpol[st][4][i], int(interpol[st][0][i]), st))
 
     # _, bound, st = min(bounds)
-    bound, st = min(bounds)
+    bound, st = min(bounds, key=lambda x: (x[0], x[1] == 'freqVis'))
+    print(st)#results[f'fix_{i}'][-1])
+    print(bound)
+    print(bounds)
 
     state_ranking = [s for s, sc in rankings[st]]
 
     results = {}
-    '''for i in range(2):
+    for i in range(2):
         muts = []
         rws = []
         print("\nBeginning fix for ranking type:", i)
@@ -65,7 +68,6 @@ def fix_states(env, pol, pol_d, cond, rankings, interpol, score_types, n_inc, n_
             #     end='\r' if i < len(state_ranking) else '\n')
         results[f'fix_{i}'] = sorted(rws, key=lambda x: x[1])
         results[f'fix_{i}'] += list(zip(state_ranking[bound:], [results[f'fix_{i}'][-1][1]] * (len(state_ranking) - bound)))
-        print(muts)'''
 
     for i in range(1, 3):
         muts = []
@@ -83,9 +85,8 @@ def fix_states(env, pol, pol_d, cond, rankings, interpol, score_types, n_inc, n_
             muts.append(mut_props)
             # print("Done interpolation with {}/{} mutations".format(i, len(state_ranking)),
             #     end='\r' if i < len(state_ranking) else '\n')
-        results[f'trip_{i+2}'] = sorted(rws, key=lambda x: x[1])
-        results[f'trip_{i+2}'] += list(zip(state_ranking[bound:], [results[f'trip_{i+2}'][-1][1]] * (len(state_ranking) - bound)))
-        print(muts)
+        results[f'trip_{i}'] = sorted(rws, key=lambda x: x[1])
+        results[f'trip_{i}'] += list(zip(state_ranking[bound:], [results[f'trip_{i}'][-1][1]] * (len(state_ranking) - bound)))
 
     end = time.time()
     log = {

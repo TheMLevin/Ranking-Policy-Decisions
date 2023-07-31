@@ -28,7 +28,7 @@ else:
     command = tasks[env].format(pol_d)
 
 # Run the command and save to a good file name
-os.system("{} -fl {}_0".format(command, env))
+os.system("{} -fl {}_1".format(command, env))
 
 # Run subsequent repeats of the command using the same config as the first
 # This is especially useful for score_auto, which will set a balanced condition

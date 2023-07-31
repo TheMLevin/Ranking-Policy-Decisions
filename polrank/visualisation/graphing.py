@@ -50,6 +50,7 @@ def draw_interpol_results(loggers, score_types, which_x, which_ys,
         all_xs.append(xs)
         all_hvals.append(hvals)
         all_yss.append(yss)
+    print(all_xs)
 
     # Currently all_hvals has an entry for each logger, which 
     # is a list of the hvals for each y axis.

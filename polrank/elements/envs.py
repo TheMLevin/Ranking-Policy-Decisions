@@ -62,7 +62,12 @@ class AbstractEnv(ABC):
     @abstractmethod
     def reset(self):
         """ Should follow OpenAI gym style returns:
-        return state """
+        return state, info """
+        pass
+
+    def image(self, state):
+        """ Str representation of exact state returns:
+        return state"""
         pass
 
     @abstractmethod

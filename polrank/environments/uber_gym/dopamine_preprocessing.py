@@ -163,7 +163,7 @@ class AtariPreprocessing(object):
     for time_step in range(self.frame_skip):
       # We bypass the Gym observation altogether and directly fetch the
       # grayscale image from the ALE. This is a little faster.
-      true_obs, reward, game_over, info = self.environment.step(action)
+      true_obs, reward, game_over, _, info = self.environment.step(action)
       accumulated_reward += reward
 
       if self.terminal_on_life_loss:

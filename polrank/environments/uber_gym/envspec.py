@@ -35,7 +35,10 @@ class GymEnv(AbstractEnv):
         return self.env.step(action)
 
     def reset(self):
-        return self.env.reset()
+        return self.env.reset(), {}
+
+    def image(self, state):
+        return str(gym_get_RGB(state))
 
     def abst(self, state, ret_str=True):
         return gym_abs_func(self.abst_type)(state, self.name, ret_str=ret_str)
