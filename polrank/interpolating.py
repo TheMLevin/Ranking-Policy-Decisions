@@ -70,6 +70,27 @@ def interpolate_policies(env, pol, pol_d, cond, rankings, score_types, n_inc, n_
 
         results[st] = inds, avgs, vrs, chks, mut_ps, n_muts
 
+        for i in tqdm([len(state_ranking)] + list(range(0, len(state_ranking), n_inc))[::-1] + [-1]):
+            if st == 'rand':
+                mpol = RandomRankingPol(pol, pol_d, state_ranking, i, abst=env.abst)
+            else:
+                not_mut = state_ranking[:i] if i >= 0 else 'all'
+                mpol = MixedPol(pol, pol_d, not_mut, abst=env.abst)
+
+            tot_rs, passes, mut_props, not_muts = test_pol(env, mpol, cond, n_test, rand=st=='rand')
+
+            # Results for complete policy are kept under index '-1', at end of list
+            inds.append(i)
+            avgs.append(np.mean(tot_rs))
+            vrs.append(np.var(tot_rs))
+            chks.append(np.mean(passes))
+            mut_ps.append(np.mean(mut_props))
+            n_muts.append(np.mean(not_muts))
+            # print("Done interpolation with {}/{} mutations".format(i, len(state_ranking)),
+            #     end='\r' if i < len(state_ranking) else '\n')
+
+        results[f'{st}_causal'] = inds, avgs, vrs, chks, mut_ps, n_muts
+
     end = time.time()
     log = {
         'interpol_time': sec_to_str(end - start)

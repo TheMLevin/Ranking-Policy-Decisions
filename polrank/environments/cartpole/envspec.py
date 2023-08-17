@@ -99,7 +99,7 @@ def cartpole_get_RGB_mut(env, state, action, mut, score, do_scale=False, crop=Tr
     frame = frame.crop((150, 75, 450, 350)) if crop else frame
     return frame
 
-font = ImageFont.truetype("arial.ttf", 16)
+#font = ImageFont.truetype("arial.ttf", 16)
 def cartpole_get_RGB_scores(env, state, action, mut, score):
     frame = cartpole_get_RGB_mut(env, state, action, mut, score, True, False)
     draw = ImageDraw.Draw(frame)

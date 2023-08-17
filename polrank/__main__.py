@@ -135,10 +135,10 @@ def main():
 
     ### Display results ###
     #  + ['fix_0', 'fix_1', 'trip_1', 'trip_2', 'trip_3', 'trip_4']
-    draw_interpol_results(logger, logger.config['score_types'] + ['group'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
+    draw_interpol_results(logger, logger.config['score_types'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
         x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=False)
-    draw_interpol_results(logger, logger.config['score_types'] + ['group'], 4, [1], y_fracs=True,
-        trans_x=lambda x: 1-x, x_name="Policy's Action Taken (% of Steps)", y_names=['Original Reward (%)'], smooth=False, combine_sbfl=True)
+    draw_interpol_results(logger, logger.config['score_types'], 4, [1], y_fracs=True,
+        trans_x=lambda x: 1-x, x_name="Policy's Action Taken (% of Steps)", y_names=['Original Reward (%)'], smooth=False, combine_sbfl=False)
 
 if __name__ == '__main__':
     main()

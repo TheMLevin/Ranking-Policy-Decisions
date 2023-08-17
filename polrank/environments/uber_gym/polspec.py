@@ -19,7 +19,7 @@ class RainbowAgent(AbstractPol):
         super().__init__(pol)
         self.nA = nA
         config = tf.ConfigProto(
-                device_count = {'GPU': 1}
+                device_count = {'GPU': 2}
             )
         config.gpu_options.allow_growth=True
         self.sess = tf.Session(config=config)

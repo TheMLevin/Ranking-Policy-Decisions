@@ -9,7 +9,7 @@ from scoring import ST_COLOURS
 def draw_interpol_results(loggers, score_types, which_x, which_ys,
     trans_x=lambda x: x, x_name=None, y_names=None,
     hlines=False, x_fracs=False, y_fracs=False, y_offset=0, saveloc=None,
-    smooth=False, combine_sbfl=False):
+    smooth=False, combine_sbfl=False, std=False):
     ''' Given score types, which x axis to use, and several y axes: makes as many graphs as
     y axes. Plots results for all score_types on one graph.
 
@@ -28,12 +28,14 @@ def draw_interpol_results(loggers, score_types, which_x, which_ys,
     all_xs = []
     all_yss = []
     all_hvals = []
+    all_stdss = []
     for logger in loggers:
         data = logger.data['interpol'][0]
         # One for each score_type
         xs = [list(map(trans_x, data[st][which_x]))[:-1] for st in score_types]
         # One for each y-axis, and then for each score_type
         yss = [[data[st][wy] for st in score_types] for wy in which_ys]
+        stdss = [[np.sqrt(data[st][2]) for st in score_types]]
 
         # if x_fracs:
         #     xs = [[val/max(x) for val in x] for x in xs]
@@ -46,11 +48,12 @@ def draw_interpol_results(loggers, score_types, which_x, which_ys,
         # Get final values for baseline and remove them
         hvals = [np.mean([vals[-1] for vals in ys]) for ys in yss]
         yss = [[vals[:-1] for vals in ys] for ys in yss]
+        stdss = [[vals[:-1] for vals in stds] for stds in stdss]
 
         all_xs.append(xs)
         all_hvals.append(hvals)
         all_yss.append(yss)
-    print(all_xs)
+        all_stdss.append(stdss)
 
     # Currently all_hvals has an entry for each logger, which 
     # is a list of the hvals for each y axis.
@@ -60,9 +63,12 @@ def draw_interpol_results(loggers, score_types, which_x, which_ys,
     if y_fracs:
         for log_ind, yss in enumerate(all_yss):
             new_yss = []
-            for ys, hval in zip(yss, hvals):
+            new_stdss = []
+            for ys, stds, hval in zip(yss, all_stdss[log_ind], hvals):
                 new_yss.append([[(val/hval) for val in vals] for vals in ys])
+                new_stdss.append([[(val/hval) for val in vals] for vals in stds])
             all_yss[log_ind] = new_yss
+            all_stdss[log_ind] = new_stdss
         hvals = [1] * len(which_ys)
 
     if not hlines:
@@ -76,10 +82,11 @@ def draw_interpol_results(loggers, score_types, which_x, which_ys,
 
     # For each y-axis (i.e. new graph) get all the relevant data from the loggers
     yss_per_graph = [[yss[which_y] for yss in all_yss] for which_y in range(len(which_ys))]
+    stdss_per_graph = [[stdss[which_y] for stdss in all_stdss] for which_y in range(len(which_ys))]
 
-    for all_ys, y_name, hv, sl in zip(yss_per_graph, y_names, hvals, savelocs):
+    for all_ys, y_name, all_stds, hv, sl in zip(yss_per_graph, y_names, stdss_per_graph, hvals, savelocs):
         # all_xs and all_ys is one for each logger and then one for each score_type
-        draw_curves(all_xs, all_ys, x_name, y_name, score_types, hval=hv, sloc=sl, smooth=smooth, combine_sbfl=combine_sbfl)
+        draw_curves(all_xs, all_ys, all_stds, x_name, y_name, score_types, hval=hv, sloc=sl, smooth=smooth, combine_sbfl=combine_sbfl, std=std)
 
 def smoothing(x, y):
     # Make sure x and y are sorted properly first!
@@ -91,7 +98,7 @@ def smoothing(x, y):
 
     return x, new_y
 
-def draw_curves(all_xs, all_ys, x_name, y_name, score_types, hval=None, sloc=None, smooth=False, combine_sbfl=False):
+def draw_curves(all_xs, all_ys, all_stds, x_name, y_name, score_types, hval=None, sloc=None, smooth=False, combine_sbfl=False, std=False):
     plt.clf()
 
     if combine_sbfl:
@@ -118,7 +125,7 @@ def draw_curves(all_xs, all_ys, x_name, y_name, score_types, hval=None, sloc=Non
         score_types = new_st
         all_xs = new_all_xs
         all_ys = new_all_ys
-    xs, mean_ys, std_ys = mean_and_var(all_xs, all_ys)
+    xs, mean_ys, std_ys = mean_and_var(all_xs, all_ys, all_stds)
     results_table_data(all_xs, all_ys, score_types)
 
     xmax = 0
@@ -143,8 +150,10 @@ def draw_curves(all_xs, all_ys, x_name, y_name, score_types, hval=None, sloc=Non
         else:
             plt.plot(x, m_y, label=st, color=ST_COLOURS[st], linewidth=3)
 
-        m_y, std_y = np.array(m_y), np.array(std_y)
-        plt.fill_between(x, m_y-std_y, m_y+std_y, color=ST_COLOURS[st], alpha=0.2)
+        if std:
+            print('here')
+            m_y, std_y = np.array(m_y), np.array(std_y)
+            plt.fill_between(x, m_y-std_y, m_y+std_y, color=ST_COLOURS[st], alpha=0.5)
 
     if hval is not None:
         plt.axhline(y=hval, xmin=0, xmax=1, linestyle='dotted', label='baseline', color='red')
@@ -185,14 +194,14 @@ def interpolate(first_ind, target_x, xys):
         slope = change / time_diff
         return base + (slope * (target_x - xys[first_ind][0]))
 
-def mean_and_var(all_xs, all_ys):
+def mean_and_var(all_xs, all_ys, all_stds):
     st_xs = []
     st_mean_ys = []
     st_std_ys = []
     # For each score type, get a line, using xs from first logger
     for st in range(len(all_xs[0])):
-        score_type_data = [(xss[st], yss[st]) for xss, yss in zip(all_xs, all_ys)]
-        score_type_data = [list(zip(xs, ys)) for xs, ys in score_type_data]
+        score_type_data = [(xss[st], yss[st], stdss[st]) for xss, yss, stdss in zip(all_xs, all_ys, all_stds)]
+        score_type_data = [list(zip(xs, ys, stds)) for xs, ys, stds in score_type_data]
         for data in score_type_data:
             data.sort(key=lambda xy: xy[0])
 
@@ -200,18 +209,19 @@ def mean_and_var(all_xs, all_ys):
         final_xs = []
         final_ys = []
         final_std = []
-        for x, y in score_type_data[0]:
+        for x, y, std in score_type_data[0]:
             ys = [y] # all the y values at this x value
+            stds = [std]
             for i in range(len(score_type_data)-1):
                 counters[i] = move_counter(counters[i], x, score_type_data[i+1])
                 ys.append(interpolate(counters[i], x, score_type_data[i+1]))
             final_xs.append(x)
             final_ys.append(np.mean(ys))
-            final_std.append(np.std(ys))
+            final_std.append(np.mean(stds))
         
         x_max = max(final_xs)
-        x_fracs = [x / x_max for x in final_xs]
-        y_min = min(final_ys)
+        x_fracs = [(x) / x_max for x in final_xs]
+        y_min = final_ys[0]
         y_max = max(final_ys)
         y_fracs = [(y - y_min) / (y_max - y_min) for y in final_ys]
         std_fracs = [s / (y_max - y_min) for s in final_std]

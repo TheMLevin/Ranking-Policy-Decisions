@@ -10,7 +10,7 @@ parser.add_argument('--rand', action='store_true', help="Use random action as de
 args = parser.parse_args()
 env = args.env
 N = args.N
-pol_d = 'random' if args.rand else 'lazy'
+pol_d = 'random' if args.rand else 'lazymod'
 
 # Dict of commands
 tasks = {
@@ -28,7 +28,8 @@ else:
     command = tasks[env].format(pol_d)
 
 # Run the command and save to a good file name
-os.system("{} -fl {}_1".format(command, env))
+print("{} -fl {}_0".format(command, env))
+os.system("{} -fl {}_0".format(command, env))
 
 # Run subsequent repeats of the command using the same config as the first
 # This is especially useful for score_auto, which will set a balanced condition

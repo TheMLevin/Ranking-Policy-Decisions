@@ -63,8 +63,9 @@ def parse_args():
         choices=ALL_SCORE_TYPES)
 
     # Grouping
-    parser.add_argument('--num_groups', '-ng', default=100)
-    parser.add_argument('--group_size', '-gs', default=2)
+    parser.add_argument('--num_groups', '-ng', type=int, default=100)
+    parser.add_argument('--num_sigma', '-ns', type=int, default=15)
+    parser.add_argument('--group_sizes', '-gs', default='5,10,20,35,50,100')
 
     # Interpolating
     parser.add_argument('--n_inc', '-ni', type=int, default=-1,

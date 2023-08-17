@@ -33,11 +33,11 @@ def main():
     }
 
     make_groups_do = {
-        'redo': counts_do['redo'] or not logger.is_done('groups')
+        'redo': counts_do['redo'] or args.redo_interpol or not logger.is_done('groups')
     }
 
     rank_groups_do = {
-        'redo': True or make_groups_do['redo'] or not logger.is_done('ranks')
+        'redo': make_groups_do['redo'] or not logger.is_done('ranks')
     }
 
     if counts_do['redo']:
@@ -59,9 +59,9 @@ def main():
         logger.dump_results()
         logger.dump_config()
 
-    draw_interpol_results(logger, ['group'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
+    draw_interpol_results(logger, logger.config['score_types'] + ['group'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
                           x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=False)
-    draw_interpol_results(logger, ['group'], 4, [1], y_fracs=True,
+    draw_interpol_results(logger, logger.config['score_types'] + ['group'], 4, [1], y_fracs=True,
                           trans_x=lambda x: 1 - x, x_name="Policy's Action Taken (% of Steps)",
                           y_names=['Original Reward (%)'], smooth=False, combine_sbfl=False)
 

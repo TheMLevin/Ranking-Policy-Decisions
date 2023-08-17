@@ -30,10 +30,12 @@ def get_counts(n_runs, env, pol, pol_d, mut_prob, cond, update_logs, update_cond
 
     mut_probs = sorted([mut_prob, 1 - mut_prob])
 
-    counts = [[],[],set()]
+    counts = []
+    all_states = {}
     succs = 0
     stepss = []
     for group in range(2):
+        count = []
         tot_rews = []
         print(f"\nBeginning counting {group}")
         print("Done with 0/{} counting runs".format(n_runs), end='\r')
@@ -44,25 +46,27 @@ def get_counts(n_runs, env, pol, pol_d, mut_prob, cond, update_logs, update_cond
             succs += 1 if succ else 0
             tot_rews.append(tot_rew)
             stepss.append(steps)
-            update_counts(counts, mut_states, norm_states, succ, tot_rew, group, auto_cond)
+            update_counts(count, all_states, mut_states, norm_states, succ, tot_rew, group, auto_cond)
 
             end = time.time()
             est_time_left = sec_to_str(((end - all_start) / (i+1)) * (n_runs - i+1))
 
             # (general) passes, abstract states, total time < estimated time left | (episode) reward, steps, time
-            print("Done with {}/{} counting runs, p:{} as:{} tt:{}<{} | r:{} s:{} t:{}".format(
-                i+1, n_runs, succs, len(counts[group]), sec_to_str(end-all_start), est_time_left, tot_rew, steps, sec_to_str(end-start)))
+            print("Done with {}/{} counting runs in {}, p:{} as:{} tt:{}<{} | r:{} s:{} t:{}".format(
+                i+1, n_runs, group, succs, len(all_states), sec_to_str(end-all_start), est_time_left, tot_rew, steps, sec_to_str(end-start)))
         all_end = time.time()
 
         if auto_cond:
-            thresh = np.mean(tot_rews)
-            counts = flex_to_counts(counts, thresh)
+            thresh = np.median(tot_rews)
+            count = flex_to_counts(count, thresh, group)
             succs += sum(rew >= thresh for rew in tot_rews)
             if not group:
                 cond_name = f'score{thresh}'
 
-    if auto_cond:
-        update_cond(cond_name)
+        counts.append(count)
+
+    '''if auto_cond:
+        update_cond(cond_name)'''
 
     '''logs = {
         'counting_abs_states': len(counts),
@@ -76,7 +80,7 @@ def get_counts(n_runs, env, pol, pol_d, mut_prob, cond, update_logs, update_cond
     }
     update_logs(logs)'''
 
-    counts[2] = list(counts[2])
+    counts.append(list(all_states.keys()))
 
     return counts
 
@@ -85,45 +89,53 @@ def run_env_with_muts(env, pol, pol_d, mut_prob, cond):
     mut_prob, and return mutations, visited states, and condition"""
     mut_states = set()
     norm_states = set()
-    s, _ = env.reset()
-    ss = env.abst(s)
-    state_seq, action_seq, rew_seq = [s], [], []
-    steps = 0
-    done = False
-    while not done:
-        if ss in mut_states:
-            a = pol_d(state_seq, action_seq, rew_seq)
-        elif ss in norm_states:
-            a = pol(state_seq, action_seq, rew_seq)
-        elif random.random() > mut_prob:
-            a = pol(state_seq, action_seq, rew_seq)
-            norm_states.add(ss)
-        else:
-            a = pol_d(state_seq, action_seq, rew_seq)
-            mut_states.add(ss)
-        s, r, done, *_ = env.step(a)
+    succs = []
+    rew_seqs = []
+    stepss = []
+    for n in range(5):
+        print(f"Run {n+1}/5")
+        s, _ = env.reset()
         ss = env.abst(s)
+        state_seq, action_seq, rew_seq = [s], [], []
+        steps = 0
+        done = False
+        while not done:
+            if ss in mut_states:
+                a = pol_d(state_seq, action_seq, rew_seq)
+            elif ss in norm_states:
+                a = pol(state_seq, action_seq, rew_seq)
+            elif random.random() > mut_prob:
+                a = pol(state_seq, action_seq, rew_seq)
+                norm_states.add(ss)
+            else:
+                a = pol_d(state_seq, action_seq, rew_seq)
+                mut_states.add(ss)
+            s, r, done, *_ = env.step(a)
+            ss = env.abst(s)
 
-        state_seq.append(s)
-        action_seq.append(a)
-        rew_seq.append(r)
-        steps += 1
+            state_seq.append(s)
+            action_seq.append(a)
+            rew_seq.append(r)
+            steps += 1
 
-    succ = cond(state_seq, action_seq, rew_seq)
+        succ = cond(state_seq, action_seq, rew_seq)
 
-    return mut_states, norm_states, succ, sum(rew_seq), steps
+        succs.append(succ)
+        rew_seqs.append(sum(rew_seq))
+        stepss.append(steps)
 
-def update_counts(counts, mut_states, norm_states, succ, tot_rew, group, auto_cond):
+
+    return mut_states, norm_states, int(np.mean(succs) + .5), np.mean(rew_seqs), np.mean(stepss)
+
+def update_counts(counts, all_states, mut_states, norm_states, succ, tot_rew, group, auto_cond):
+    for state in mut_states | norm_states:
+        all_states[state] = 0
     if auto_cond or succ == group:
-        counts[group].append((tuple(norm_states if group else mut_states), tot_rew))
-    counts[2] |= mut_states
-    counts[2] |= norm_states
+        counts.append((tuple(list(all_states.keys()).index(state) for state in (norm_states if group else mut_states)), tot_rew))
 
-def flex_to_counts(flex_counts, thresh):
-    counts = [[],[], []]
-    for group, runs in enumerate(flex_counts[:2]):
-        for states, rew in runs:
-            if (rew >= thresh) == group:
-                counts[group].append((states, rew))
-    counts[2] = flex_counts[2]
+def flex_to_counts(flex_counts, thresh, tp):
+    counts = []
+    for states, rew in flex_counts:
+        if (rew >= thresh) == tp:
+            counts.append((states, rew))
     return counts
