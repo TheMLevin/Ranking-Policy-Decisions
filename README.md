@@ -1,6 +1,6 @@
-# Ranking Policy Decisions
+# Clustered Policy Decision Ranking
 
-Code associated with paper [Ranking Policy Decisions](https://arxiv.org/abs/2008.13607).
+<b>This code will only run on Linux machines</b>
 
 Given a policy _p_, a default policy _d_, and some condition, this code will allow you to score states 
 according to how important it is to follow _p_ over _d_
@@ -20,7 +20,7 @@ conda activate polrank
 
 ## Setting Up (RL) Environments
 
-#### Carpole
+#### CartPole
 For [CartPole](https://gym.openai.com/envs/CartPole-v0/), that's it!
 
 #### Minigrid
@@ -72,7 +72,8 @@ Running an experiment will download any models needed to run the experiments. Th
 
 To run the code with all the customization that is available, use:
 ```
-python3 polrank
+python3 polrank                         # For FreqVis, Rand, and SBFL
+python3 polrank/__main__2.py            # For clustering
 ```
 
 You may want to look at the commands in ```quick_start.py``` to get started.

@@ -16,7 +16,7 @@ INTERPOL_COLS = [
     "Number of Active Actions Taken",
 ]
 
-GROUPSS = ['group-','group+','group+-']
+GROUPSS = ['cluster-','cluster+','cluster+-']
 
 def rank(logger):
     """ Set up interpolation, with score types either
@@ -60,7 +60,7 @@ def rank_groups(env, pol, pol_d, cond, groupss, ranks, all_states, space, n_inc,
         ranked, _ = list(zip(*result))
         ranked = ([],) + ranked + (all_states,)
         inds, avgs, vrs, chks, mut_ps, n_muts = [], [], [], [], [], []
-        print(f"\nBeginning cumulative group interpolation of {name}")
+        print(f"\nBeginning cumulative cluster interpolation of {name}")
         for i in tqdm(range(len(ranked))):
             not_mut = set(sum(ranked[:i+1], []))
             if inds and inds[-1] == len(not_mut):

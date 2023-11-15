@@ -37,7 +37,7 @@ def parse_args():
         help="Default (-1) means no max. Not implemented for all envs.")
     parser.add_argument('--pol_name', '-p', default='minigrid_good',
         choices=ALL_POLS)
-    parser.add_argument('--pol_d_name', '-pd', default='lazy',
+    parser.add_argument('--pol_d_name', '-pd', default='lazymod',
         choices=ALL_POLS)
     parser.add_argument('--cond_name', '-cd', default='score0.85', 
         help="What condition is being tested? Look in element/conditions for options.")

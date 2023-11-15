@@ -45,6 +45,7 @@ def main():
         logger.update_counts(counts, combine=False, ind=2)
         logger.dump_results()
         logger.dump_config()
+        logger.load_results()
 
     if make_groups_do['redo']:
         groups = group(logger)
@@ -59,7 +60,7 @@ def main():
         logger.dump_results()
         logger.dump_config()
 
-    POLICIES = logger.config['score_types'] + ['cluster-','cluster+','cluster+-']
+    POLICIES = logger.data['interpol'][0].keys()
 
     # draw_interpol_results(logger, POLICIES, 0, [1], x_fracs=True, y_fracs=True, smooth=False,
     #                       x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=False)
@@ -83,4 +84,4 @@ def main():
 if __name__ == '__main__':
     main()
 
-# Hyperparameters: mu for down-weight, sigma for number of singular values, nu for group proportion
+# Hyperparameters: mu for mutation rate, N for sample size, delta for down-weight, sigma for number of singular values, eta for group proportion
