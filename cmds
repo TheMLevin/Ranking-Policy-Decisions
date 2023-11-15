@@ -1,7 +1,9 @@
 python polrank/__main__2.py --env_name UBERBowling --pol_name UBERBowling --pol_d_name lazymod --cond_name score_auto -nr 1000 -nt 50 -ni -1 -mu 0.2 -a -1 --max_steps 600 -fl Bowling_1
 python polrank/__main__2.py --env_name MiniGrid-LavaCrossingS9N1-v0 --pol_name minigrid_lava --pol_d_name lazymod --cond_name score_auto -nr 5000 -nt 100 -ni 200 -mu 0.2 -fl Minigrid_2
 python polrank/__main__2.py --env_name CartPole-v0 --pol_name CartPole_good --pol_d_name lazymod --cond_name score200 -nr 5000 -nt 100 -ni 100 -mu 0.4 -fl CartPole_0
-python polrank/__main__2.py --env_name UBERHero --pol_name UBERHero --pol_d_name lazymod --cond_name score_auto -nr 1000 -nt 50 -ni -1 -mu 0.2 -a -1 --max_steps 600 -fl Hero_0 --group_sizes="5,10,20,35,50,100,200,300"
+python polrank/__main__2.py --env_name UBERHero --pol_name UBERHero --pol_d_name lazymod --cond_name score_auto -nr 1000 -nt 50 -ni -1 -mu 0.2 -a -1 --max_steps 600 -fl Hero_0
 python polrank/__main__2.py --env_name UBERAsteroids --pol_name UBERAsteroids --pol_d_name lazymod --cond_name score_auto -nr 1000 -nt 50 -ni -1 -mu 0.2 -a -1 --max_steps 600 -fl Asteroids_0 --group_sizes="5,10,20,35"
-srun --pty -X -n 8 -p dpart --qos=medium --mem=64g --time=24:00:00 bash
-srun --pty -X -n 8 -p dpart --qos=medium --mem=64g --time=36:00:00 bash
+python polrank/__main__2.py --env_name UBERBoxing --pol_name UBERBoxing --pol_d_name lazymod --cond_name score_auto -nr 1000 -nt 50 -ni -1 -mu 0.2 -a -1 --max_steps 600 -fl Boxing_0
+python polrank/__main__2.py --env_name UBERPong --pol_name UBERPong --pol_d_name lazymod --cond_name score_auto -nr 1000 -nt 50 -ni -1 -mu 0.2 -a -1 --max_steps 600 -fl Pong_0
+python polrank/__main__2.py --env_name UBERKrull --pol_name UBERKrull --pol_d_name lazymod --cond_name score_auto -nr 1000 -nt 50 -ni -1 -mu 0.2 -a -1 --max_steps 600 -fl Krull_0
+srun --partition=cml-cpu --account=cml --qos=cml-cpu --pty --time 7-00:00:00 bash

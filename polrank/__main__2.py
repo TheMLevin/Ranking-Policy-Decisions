@@ -59,12 +59,28 @@ def main():
         logger.dump_results()
         logger.dump_config()
 
-    draw_interpol_results(logger, logger.config['score_types'] + ['group'], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
-                          x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=False)
-    draw_interpol_results(logger, logger.config['score_types'] + ['group'], 4, [1], y_fracs=True,
+    POLICIES = logger.config['score_types'] + ['cluster-','cluster+','cluster+-']
+
+    # draw_interpol_results(logger, POLICIES, 0, [1], x_fracs=True, y_fracs=True, smooth=False,
+    #                       x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=False)
+    # draw_interpol_results(logger, POLICIES, 4, [1], y_fracs=True,
+    #                       trans_x=lambda x: 1 - x, x_name="Policy's Action Taken (% of Steps)",
+    #                       y_names=['Original Reward (%)'], smooth=False, combine_sbfl=False)
+
+    # draw_interpol_results(logger, [f'{p}_causal' for p in POLICIES], 0, [1], x_fracs=True, y_fracs=True, smooth=False,
+    #                       x_name='States Restored (%)', y_names=['Original Reward (%) Causal'], combine_sbfl=False)
+    # draw_interpol_results(logger, [f'{p}_causal' for p in POLICIES], 4, [1], y_fracs=True,
+    #                       trans_x=lambda x: 1 - x, x_name="Policy's Action Taken (% of Steps)",
+    #                       y_names=['Original Reward (%) Causal'], smooth=False, combine_sbfl=False)
+
+    draw_interpol_results(logger, POLICIES, 0, [1], x_fracs=True, y_fracs=True, smooth=False,
+                          x_name='States Restored (%)', y_names=['Original Reward (%)'], combine_sbfl=True)
+    draw_interpol_results(logger, POLICIES, 4, [1], y_fracs=True,
                           trans_x=lambda x: 1 - x, x_name="Policy's Action Taken (% of Steps)",
-                          y_names=['Original Reward (%)'], smooth=False, combine_sbfl=False)
+                          y_names=['Original Reward (%)'], smooth=False, combine_sbfl=True)
 
 
 if __name__ == '__main__':
     main()
+
+# Hyperparameters: mu for down-weight, sigma for number of singular values, nu for group proportion

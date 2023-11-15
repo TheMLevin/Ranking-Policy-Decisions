@@ -1,6 +1,7 @@
 import random
 from functools import reduce
 from scipy.sparse.linalg import svds
+from tqdm import tqdm
 
 import numpy as np
 
@@ -10,8 +11,9 @@ def group(logger):
     # N = config['num_groups']
     # group_size = config['group_size']
     k = config['num_sigma']
-    group_sizes = [int(x) for x in config['group_sizes'].split(',')]
+    group_size = config['group_size']
     counts = logger.data['counts2'][0]
+    space = len(logger.data['counts'][0])
     print([len(x) for x in counts])
 
     Ms = [[],[],[]]
@@ -20,21 +22,25 @@ def group(logger):
         clusters, scores = list(zip(*counts[tp]))
         maxs = max(scores)
         mins = min(scores)
-        for cluster, score in counts[tp]:
-            v = (((score - mins) / (maxs - mins)) ** 2 - (0 if tp else 1)) * np.array([x in cluster for x in range(len(all_states))])
+        print(f"\nBeginning vectorization of type ({'+' if tp else '-'}):")
+        for cluster, score in tqdm(counts[tp]):
+            v = np.zeros(len(all_states))
+            v[cluster] = ((score - mins) / (maxs - mins)) ** 2 - (0 if tp else 1)
             Ms[tp].append(v)
             Ms[2].append(v)
 
-    groups = []
-    for M in Ms:
+    print(f"\nBeginning dimensional reduction:")
+    groupss = []
+    for M in tqdm(Ms):
         M = np.array(M)
-        M /= np.emath.logn(5, sum(M != 0) / 2 + 5)
+        M /= np.emath.logn(5, sum(M != 0) + 5)
         pca, *_ = svds(M.T, k)
+        groups = []
         for composite in pca.T:
             composite = abs(composite)
             ids = np.argsort(composite)
-            for size in group_sizes:
-                groups.append([int(x) for x in ids[-size:]])
+            groups.append([int(x) for x in ids[-int(group_size * space):]])
+        groupss.append(groups)
     '''for tp in range(2):
         clusters, scores = list(zip(*logger.data['counts2'][0][tp]))
         maxs = max(scores)
@@ -47,4 +53,4 @@ def group(logger):
         groups = sorted(groups, key=lambda x: (len(x), random.random()))
         groups = [groups[0] | groups[1]] + groups[2:]'''
 
-    return groups
+    return groupss

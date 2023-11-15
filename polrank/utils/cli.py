@@ -64,8 +64,8 @@ def parse_args():
 
     # Grouping
     parser.add_argument('--num_groups', '-ng', type=int, default=100)
-    parser.add_argument('--num_sigma', '-ns', type=int, default=15)
-    parser.add_argument('--group_sizes', '-gs', default='5,10,20,35,50,100')
+    parser.add_argument('--num_sigma', '-ns', type=int, default=30)
+    parser.add_argument('--group_size', '-gs', default=0.04)
 
     # Interpolating
     parser.add_argument('--n_inc', '-ni', type=int, default=-1,

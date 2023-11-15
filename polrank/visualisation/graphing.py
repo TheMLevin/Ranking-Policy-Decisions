@@ -9,7 +9,7 @@ from scoring import ST_COLOURS
 def draw_interpol_results(loggers, score_types, which_x, which_ys,
     trans_x=lambda x: x, x_name=None, y_names=None,
     hlines=False, x_fracs=False, y_fracs=False, y_offset=0, saveloc=None,
-    smooth=False, combine_sbfl=False, std=False):
+    smooth=False, combine_sbfl=False, do_std=False):
     ''' Given score types, which x axis to use, and several y axes: makes as many graphs as
     y axes. Plots results for all score_types on one graph.
 
@@ -86,7 +86,7 @@ def draw_interpol_results(loggers, score_types, which_x, which_ys,
 
     for all_ys, y_name, all_stds, hv, sl in zip(yss_per_graph, y_names, stdss_per_graph, hvals, savelocs):
         # all_xs and all_ys is one for each logger and then one for each score_type
-        draw_curves(all_xs, all_ys, all_stds, x_name, y_name, score_types, hval=hv, sloc=sl, smooth=smooth, combine_sbfl=combine_sbfl, std=std)
+        draw_curves(all_xs, all_ys, all_stds, x_name, y_name, score_types, hval=hv, sloc=sl, smooth=smooth, combine_sbfl=combine_sbfl, do_std=do_std)
 
 def smoothing(x, y):
     # Make sure x and y are sorted properly first!
@@ -98,33 +98,39 @@ def smoothing(x, y):
 
     return x, new_y
 
-def draw_curves(all_xs, all_ys, all_stds, x_name, y_name, score_types, hval=None, sloc=None, smooth=False, combine_sbfl=False, std=False):
+def draw_curves(all_xs, all_ys, all_stds, x_name, y_name, score_types, hval=None, sloc=None, smooth=False, combine_sbfl=False, do_std=False):
     plt.clf()
 
     if combine_sbfl:
         new_all_xs = []
         new_all_ys = []
-        for xs, ys in zip(all_xs, all_ys):
-            new_xs, new_ys, new_st, sbfl_x, sbfl_y = [], [], [], [], []
-            for x, y, st in zip(xs, ys, score_types):    
+        new_all_stds = []
+        for xs, ys, stds in zip(all_xs, all_ys, all_stds):
+            new_xs, new_ys, new_stds, new_st, sbfl_x, sbfl_y, sbfl_std = [], [], [], [], [], [], []
+            for x, y, std, st in zip(xs, ys, stds, score_types):
                 if st in ["zoltar", "tarantula", "wongII", "ochiai"]:
                     sbfl_x.append(x)
                     sbfl_y.append(y)
+                    sbfl_std.append(std)
                 else:
                     new_xs.append(x)
                     new_ys.append(y)
+                    new_stds.append(std)
                     new_st.append(st)
 
-            sbfl_x, sbfl_y = combine_lines(sbfl_x, sbfl_y, only_improve=True)
+            sbfl_x, sbfl_y, sbfl_std = combine_lines(sbfl_x, sbfl_y, sbfl_std, only_improve=True)
             new_xs.append(sbfl_x)
             new_ys.append(sbfl_y)
+            new_stds.append(sbfl_std)
             new_st.append('SBFL')
 
             new_all_xs.append(new_xs)
             new_all_ys.append(new_ys)
+            new_all_stds.append(new_stds)
         score_types = new_st
         all_xs = new_all_xs
         all_ys = new_all_ys
+        all_stds = new_all_stds
     xs, mean_ys, std_ys = mean_and_var(all_xs, all_ys, all_stds)
     results_table_data(all_xs, all_ys, score_types)
 
@@ -150,8 +156,7 @@ def draw_curves(all_xs, all_ys, all_stds, x_name, y_name, score_types, hval=None
         else:
             plt.plot(x, m_y, label=st, color=ST_COLOURS[st], linewidth=3)
 
-        if std:
-            print('here')
+        if do_std:
             m_y, std_y = np.array(m_y), np.array(std_y)
             plt.fill_between(x, m_y-std_y, m_y+std_y, color=ST_COLOURS[st], alpha=0.5)
 
@@ -261,36 +266,41 @@ def results_table_data(all_xs, all_ys, score_types):
 results_table_data.count = 0
 
 
-def combine_lines(xs, ys, only_improve=False):
+def combine_lines(xs, ys, stds, only_improve=False):
     """ Take list of lists for xs and ys (for each score type)
     and use best in each point. """
 
-    all_points = [(x_val, y_val) for x, y in zip(xs, ys) for x_val, y_val in zip(x, y)]
+    all_points = [(x_val, y_val, std_val) for x, y, std in zip(xs, ys, stds) for x_val, y_val, std_val in zip(x, y, std)]
     all_points.sort(key=lambda tup: tup[0])
 
     xmax = all_points[-1][0]
 
     combined_x = [all_points[0][0]]
     combined_y = [all_points[0][1]]
+    combined_std = [all_points[0][2]]
 
     if only_improve:
-        for x_val, y_val in all_points[1:]:
+        for x_val, y_val, std_val in all_points[1:]:
             if x_val == combined_x[-1]:
                 combined_y[-1] = max(y_val, combined_y[-1])
+                combined_std[-1] = min(std_val, combined_y[-1])
             elif y_val > combined_y[-1]:
                 combined_x.append(x_val)
                 combined_y.append(y_val)
+                combined_std.append(std_val)
         combined_x.append(xmax)
         combined_y.append(combined_y[-1])
     else:
         for x_val, y_val in all_points[1:]:
             if x_val == combined_x[-1]:
                 combined_y[-1] = max(y_val, combined_y[-1])
+                combined_std[-1] = max(std_val, combined_std[-1])
             else:
                 combined_x.append(x_val)
                 combined_y.append(y_val)
+                combined_std.append(std_val)
 
-    return combined_x, combined_y
+    return combined_x, combined_y, combined_std
 
 def only_improve(xs, m_ys, std_ys):
     """ Takes list of x values and list of y values """

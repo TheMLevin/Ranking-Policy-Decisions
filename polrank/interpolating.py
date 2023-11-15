@@ -70,11 +70,13 @@ def interpolate_policies(env, pol, pol_d, cond, rankings, score_types, n_inc, n_
 
         results[st] = inds, avgs, vrs, chks, mut_ps, n_muts
 
-        for i in tqdm([len(state_ranking)] + list(range(0, len(state_ranking), n_inc))[::-1] + [-1]):
+        inds, avgs, vrs, chks, mut_ps, n_muts = [], [], [], [], [], []
+        print("\nBeginning reverse interpolation for ranking with score type:", st)
+        for i in tqdm(list(range(0, len(state_ranking), n_inc)) + [len(state_ranking), -1]):
             if st == 'rand':
                 mpol = RandomRankingPol(pol, pol_d, state_ranking, i, abst=env.abst)
             else:
-                not_mut = state_ranking[:i] if i >= 0 else 'all'
+                not_mut = state_ranking[::-1][:i] if i >= 0 else 'all'
                 mpol = MixedPol(pol, pol_d, not_mut, abst=env.abst)
 
             tot_rs, passes, mut_props, not_muts = test_pol(env, mpol, cond, n_test, rand=st=='rand')

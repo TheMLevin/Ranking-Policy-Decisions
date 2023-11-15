@@ -70,7 +70,6 @@ class Logger():
             "mut_prob",
             "score_types",
             "num_groups",
-            "group_size",
             "n_inc",
             "n_test",
             "abst_type",
