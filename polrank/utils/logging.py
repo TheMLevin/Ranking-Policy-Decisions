@@ -65,7 +65,6 @@ class Logger():
             "env_seed",
             "pol_name",
             "pol_d_name",
-            "cond_name",
             "n_runs",
             "mut_prob",
             "score_types",
